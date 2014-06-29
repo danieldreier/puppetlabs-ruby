@@ -1,5 +1,14 @@
 require 'spec_helper_acceptance'
 
+case fact('lsbdistdescription')
+when 'Ubuntu 14.04 LTS'
+  rubygems_package_name = 'ruby'
+  ruby_package_name     = 'ruby'
+else
+  rubygems_package_name = 'rubygems'
+  ruby_package_name     = 'ruby'
+end
+
 describe 'ruby class' do
   context 'without parameters' do
     it 'should run with no errors' do
@@ -43,7 +52,8 @@ describe 'ruby class' do
     end
   end
 
-  context 'with ruby 1.8.7 specified' do
+  RUBY187_UNSUPPORTED_PLATFORMS = ['Ubuntu 14.04 LTS']
+  context 'with ruby 1.8.7 specified', :unless => RUBY187_UNSUPPORTED_PLATFORMS.include?(fact('lsbdistdescription')) do
     it 'should run with no errors' do
       pp = <<-EOS
       class { 'ruby':
@@ -77,7 +87,7 @@ describe 'ruby class' do
       expect(apply_manifest(pp, :catch_failures => true).exit_code).to be_zero
     end
 
-    describe package('rubygems') do
+    describe package(rubygems_package_name) do
       it {
         should be_installed
       }
